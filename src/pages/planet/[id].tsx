@@ -1,11 +1,12 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import styles from '../../styles/planet.module.css';
-
-import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useWishlist } from 'context/wishlist';
 
 type Planet = {
   name: string;
@@ -36,18 +37,28 @@ const MainStyled = styled.main`
 
 function formatDate(dateStr: String) {
   const date = new Date(String(dateStr));
-  return date.toLocaleString(); // Adjust this formatting as per your requirement
+  return date.toLocaleString();
 }
 
 const Detail: NextPage = () => {
   const router = useRouter();
   const { id } = router.query;
+  const validId = id as string;
 
   const planetUrl = `https://swapi.dev/api/planets/${id}/`;
   const [planet, setPlanet] = useState<Planet | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const { addToWishlist, removeFromWishlist, wishlist } = useWishlist();
+  const isPlanetInWishlist = wishlist.includes(validId);
+
+  const handleWishlistClick = () => {
+    if (isPlanetInWishlist) {
+      removeFromWishlist(validId);
+    } else {
+      addToWishlist(validId);
+    }
+  };
 
   useEffect(() => {
     const fetchPlanetDetail = async () => {
@@ -136,6 +147,19 @@ const Detail: NextPage = () => {
                   </tr>
                 </tbody>
               </table>
+            </div>
+            <div>
+              <button
+                onClick={handleWishlistClick}
+                className={
+                  isPlanetInWishlist ? styles.removeFromWishlistButton : styles.addToWishlistButton
+                }
+              >
+                {isPlanetInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              </button>
+              <button className={styles.returnButton}>
+                <Link href="/planet/list">Return to Planet List</Link>
+              </button>
             </div>
           </>
         )}
