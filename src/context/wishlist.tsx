@@ -1,5 +1,5 @@
 import type { NextPage } from 'next';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 type Wishlist = {
   wishlist: string[];
@@ -18,12 +18,36 @@ export const useWishlist = () => useContext(WishlistContext);
 export const WishlistProvider: NextPage = ({ children }) => {
   const [wishlist, setWishlist] = useState<string[]>([]);
 
+  useEffect(() => {
+    const storedWishlist = localStorage.getItem('wishlist');
+    if (storedWishlist) {
+      try {
+        const parsedWishlist = JSON.parse(storedWishlist);
+        setWishlist(parsedWishlist);
+      } catch (error) {
+        console.error('Error parsing wishlist data:', error);
+      }
+    }
+  }, []);
+
+  const saveWishlistToLocalStorage = (wishlist: string[]) => {
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  };
+
   const addToWishlist = (planetId: string) => {
-    setWishlist((prevWishlist) => [...prevWishlist, planetId]);
+    setWishlist((prevWishlist) => {
+      const updatedWishlist = [...prevWishlist, planetId];
+      saveWishlistToLocalStorage(updatedWishlist);
+      return updatedWishlist;
+    });
   };
 
   const removeFromWishlist = (planetId: string) => {
-    setWishlist((prevWishlist) => prevWishlist.filter((id) => id !== planetId));
+    setWishlist((prevWishlist) => {
+      const updatedWishlist = prevWishlist.filter((id) => id !== planetId);
+      saveWishlistToLocalStorage(updatedWishlist);
+      return updatedWishlist;
+    });
   };
 
   return (
